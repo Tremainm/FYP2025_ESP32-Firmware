@@ -38,8 +38,8 @@ MatterTemperatureSensor TemperatureSensor;
 // CONFIG_ENABLE_CHIPOBLE is enabled when BLE is used to commission the Matter Network
 #if !CONFIG_ENABLE_CHIPOBLE
 // WiFi is manually set and started
-const char *ssid = "VODAFONE-56F4";          // Change this to your WiFi SSID
-const char *password = "YNEeaPCkyHYGYJAb";  // Change this to your WiFi password
+const char *ssid = "TremainIphoneX";          // Change this to your WiFi SSID VODAFONE-56F4
+const char *password = "tremainM";  // Change this to your WiFi password YNEeaPCkyHYGYJAb
 #endif
 
 #define DHT22_PIN 2
