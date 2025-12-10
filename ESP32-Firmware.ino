@@ -4,7 +4,7 @@
 const char* ssid = "TremainIphoneX";
 const char* password = "tremainM";
 
-#define DHT22_PIN 15
+#define DHT22_PIN 2
 
 DHTesp dht;
 

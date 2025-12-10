@@ -20,22 +20,31 @@
  */
 
 // Matter Manager
+#undef CONFIG_ENABLE_CHIPOBLE
+#define CONFIG_ENABLE_CHIPOBLE 0
+
 #include <Matter.h>
 #if !CONFIG_ENABLE_CHIPOBLE
 // if the device can be commissioned using BLE, WiFi is not used - save flash space
 #include <WiFi.h>
+#include "DHTesp.h"
 #endif
 
 // List of Matter Endpoints for this Node
 // Matter Temperature Sensor Endpoint
-MatterTemperatureSensor SimulatedTemperatureSensor;
+// MatterTemperatureSensor SimulatedTemperatureSensor;
+MatterTemperatureSensor TemperatureSensor;
 
 // CONFIG_ENABLE_CHIPOBLE is enabled when BLE is used to commission the Matter Network
 #if !CONFIG_ENABLE_CHIPOBLE
 // WiFi is manually set and started
-const char *ssid = "TremainIphoneX";          // Change this to your WiFi SSID
-const char *password = "tremainM";  // Change this to your WiFi password
+const char *ssid = "VODAFONE-56F4";          // Change this to your WiFi SSID
+const char *password = "YNEeaPCkyHYGYJAb";  // Change this to your WiFi password
 #endif
+
+#define DHT22_PIN 2
+
+DHTesp dht;
 
 // set your board USER BUTTON pin here - decommissioning button
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
@@ -60,6 +69,12 @@ float getSimulatedTemperature() {
   return simulatedTempHWSensor;
 }
 
+float getDHT22Temperature() {
+  float temperature = dht.getTemperature();
+
+  return temperature;
+}
+
 void setup() {
   // Initialize the USER BUTTON (Boot button) that will be used to decommission the Matter Node
   pinMode(buttonPin, INPUT_PULLUP);
@@ -70,17 +85,30 @@ void setup() {
 #if !CONFIG_ENABLE_CHIPOBLE
   // Manually connect to WiFi
   WiFi.begin(ssid, password);
+  dht.setup(DHT22_PIN, DHTesp::DHT22);
   // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
   Serial.println();
+  Serial.println("WiFi connected");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+
 #endif
 
   // set initial temperature sensor measurement
-  // Simulated Sensor - it shall initially print -25C and then move to the -10C to 10C range
-  SimulatedTemperatureSensor.begin(-25.00);
+  // Simulated Sensor - it shall initially print 0C and then move to the -10C to 10C range
+  // SimulatedTemperatureSensor.begin(0.00);
+
+  // IMPORTANT: Create endpoint BEFORE Matter.begin()
+  bool ok = TemperatureSensor.begin(-25.00);
+  if (!ok) {
+    Serial.println("ERROR: Temperature sensor endpoint FAILED to initialize!");
+  } else {
+    Serial.println("Temperature sensor endpoint created!");
+  }
 
   // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();
@@ -111,10 +139,10 @@ void loop() {
   // Print the current temperature value every 5s
   if (!(timeCounter++ % 10)) {  // delaying for 500ms x 10 = 5s
     // Print the current temperature value
-    Serial.printf("Current Temperature is %.02fC\r\n", SimulatedTemperatureSensor.getTemperature());
+    Serial.printf("Current Temperature is %.02fC\r\n", TemperatureSensor.getTemperature());
     // Update Temperature from the (Simulated) Hardware Sensor
     // Matter APP shall display the updated temperature percent
-    SimulatedTemperatureSensor.setTemperature(getSimulatedTemperature());
+    TemperatureSensor.setTemperature(getDHT22Temperature());
   }
 
   // Check if the button has been pressed
